@@ -2,42 +2,32 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
+    public Transform target;
+    public Rigidbody targetRb;
 
-    public PlayerMove playerMove;
+    public Vector3 closeOffset = new Vector3(0, 3, -5);
+    public Vector3 farOffset = new Vector3(0, 4, -9);
 
-    [Header("Movimento")]
-    public float distanciaMax = 10f;
-    public float distanciaMin = 5f;
-
-    private Vector3 posicaoInicial;
-
-
-    void Start()
-    {
-        posicaoInicial = transform.localPosition;
-
-    }
+    public float smoothSpeed = 5f;
+    public float speedForMaxDistance = 25f;
 
     void LateUpdate()
     {
-        float porcentageVelocidade =
-            playerMove.velocidadeAtual / playerMove.velocidadeMaxima;
+        float speed = targetRb.linearVelocity.magnitude;
 
-        float distanciaAtual = Mathf.Lerp(
-            distanciaMin,
-            distanciaMax,
-            porcentageVelocidade
+        // Quanto mais rápido, mais longe
+        float t = Mathf.InverseLerp(0, speedForMaxDistance, speed);
+
+        Vector3 currentOffset = Vector3.Lerp(closeOffset, farOffset, t);
+
+        Vector3 desiredPosition = target.position + target.TransformDirection(currentOffset);
+
+        transform.position = Vector3.Lerp(
+            transform.position,
+            desiredPosition,
+            smoothSpeed * Time.deltaTime
         );
 
-        transform.localPosition = new Vector3(
-            posicaoInicial.x,
-            posicaoInicial.y,
-            - distanciaAtual
-        );
-    }
-
-    void Update()
-    {
-
+        transform.LookAt(target.position + Vector3.up * 1.5f);
     }
 }

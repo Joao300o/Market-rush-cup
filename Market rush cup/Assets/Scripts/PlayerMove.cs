@@ -3,59 +3,60 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerMove : MonoBehaviour
 {
-    [Header("Movimento")]
-    public float velocidadeMaxima = 20f;
-    public float aceleracaoPorSegundo = 1f; // substitui o AumentoGradual
-
-    [Header("Câmera")]
-    public Transform cameraTransform;
+    public float acceleration = 20f;
+    public float maxSpeed = 25f;
+    public float turnSpeed = 80f;
+    public float drag = 1f;
 
     private Rigidbody rb;
-    public float velocidadeAtual = 0f;
+
+    private float moveInput;
+    private float turnInput;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
 
-        // Evita que o Rigidbody rotacione pelo physics (você controla a rotação)
-        rb.freezeRotation = true;
+        rb.linearDamping = drag;
+        rb.angularDamping = 5f;
+        rb.centerOfMass = new Vector3(0, -0.5f, 0);
+    }
+
+    void Update()
+    {
+        moveInput = Input.GetAxis("Vertical");
+        turnInput = Input.GetAxis("Horizontal");
     }
 
     void FixedUpdate()
     {
-        float h = Input.GetAxisRaw("Horizontal");
-        float v = Input.GetAxisRaw("Vertical");
+        Move();
+        Turn();
+    }
 
-        // Aumenta a velocidade gradualmente ao longo do tempo
-        if (h != 0 || v != 0)
+    void Move()
+    {
+        // Só acelera se não passou da velocidade máxima
+        if (rb.linearVelocity.magnitude < maxSpeed)
         {
-            velocidadeAtual = Mathf.MoveTowards(
-                velocidadeAtual,
-                velocidadeMaxima,
-                aceleracaoPorSegundo * Time.fixedDeltaTime
-            );
+            rb.AddForce(transform.forward * moveInput * acceleration);
         }
-        else
-        {
-            velocidadeAtual = 0f; // para ao soltar as teclas
-        }
+    }
 
-        // Direção baseada na câmera
-        Vector3 forward = cameraTransform.forward;
-        Vector3 right   = cameraTransform.right;
+    void Turn()
+    {
+        // Quanto mais rápido, mais consegue virar
+        float speedFactor = rb.linearVelocity.magnitude / maxSpeed;
 
-        forward.y = 0f;
-        right.y   = 0f;
+        float turn = turnInput * turnSpeed * speedFactor * Time.fixedDeltaTime;
 
-        forward.Normalize();
-        right.Normalize();
+        Quaternion turnRotation = Quaternion.Euler(0f, turn, 0f);
 
-        Vector3 direcao = (forward * v + right * h).normalized;
-        Vector3 movimento = direcao * velocidadeAtual;
+        rb.MoveRotation(rb.rotation * turnRotation);
+    }
 
-        // Mantém a velocidade vertical (gravidade do Rigidbody é automática)
-        movimento.y = rb.linearVelocity.y;
-
-        rb.linearVelocity = movimento;
+    public float CurrentSpeed()
+    {
+        return rb.linearVelocity.magnitude;
     }
 }
