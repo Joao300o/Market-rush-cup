@@ -11,7 +11,7 @@ public class PlayerMove : MonoBehaviour
     public Transform cameraTransform;
 
     private Rigidbody rb;
-    private float velocidadeAtual = 0f;
+    public float velocidadeAtual = 0f;
 
     void Start()
     {
