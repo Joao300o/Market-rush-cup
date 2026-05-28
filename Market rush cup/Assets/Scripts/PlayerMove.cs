@@ -7,6 +7,7 @@ public class PlayerMove : MonoBehaviour
     public float maxSpeed = 25f;
     public float turnSpeed = 80f;
     public float drag = 1f;
+    public bool canMove = false;
 
     private Rigidbody rb;
 
@@ -24,6 +25,7 @@ public class PlayerMove : MonoBehaviour
 
     void Update()
     {
+        if (!canMove) return;
         moveInput = Input.GetAxis("Vertical");
         turnInput = Input.GetAxis("Horizontal");
     }
