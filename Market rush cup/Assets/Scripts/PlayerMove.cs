@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerMove : MonoBehaviour
@@ -7,7 +8,9 @@ public class PlayerMove : MonoBehaviour
     public float maxSpeed = 25f;
     public float turnSpeed = 80f;
     public float drag = 1f;
+
     public bool canMove = false;
+    public bool stunned = false;
 
     private Rigidbody rb;
 
@@ -26,8 +29,18 @@ public class PlayerMove : MonoBehaviour
     void Update()
     {
         if (!canMove) return;
-        moveInput = Input.GetAxis("Vertical");
-        turnInput = Input.GetAxis("Horizontal");
+
+        if (!stunned)
+        {
+            moveInput = Input.GetAxis("Vertical");
+            turnInput = Input.GetAxis("Horizontal");
+        }
+        else
+        {
+            // perde controle durante stun
+            moveInput = 0;
+            turnInput = 0;
+        }
     }
 
     void FixedUpdate()
@@ -60,5 +73,26 @@ public class PlayerMove : MonoBehaviour
     public float CurrentSpeed()
     {
         return rb.linearVelocity.magnitude;
+    }
+
+    public IEnumerator Spin()
+    {
+        stunned = true;
+
+        // força lateral pra deslizar
+        rb.AddForce(transform.right * 15f, ForceMode.Impulse);
+
+        float timer = 0f;
+
+        while (timer < 1.5f)
+        {
+            transform.Rotate(Vector3.up * 900 * Time.deltaTime);
+
+            timer += Time.deltaTime;
+
+            stunned = false;
+            yield return null;
+        }
+
     }
 }
